@@ -656,6 +656,28 @@ namespace ReplayDecoder
             }
         }
 
+        public async Task<ReplayInfo?> DecodeInfoOnly(Stream stream)
+        {
+            int magic = await DecodeInt(stream);
+            byte version = await DecodeByte(stream);
+
+            if (magic == 0x442d3d69 && version == 1)
+            {
+                StructType type = (StructType)await DecodeByte(stream);
+                if (type == StructType.info) {
+                    replay.info = await DecodeInfo(stream);
+                    this.stream = stream;
+                    return replay.info;
+                } else {
+                    return null;
+                }
+            }
+            else
+            {
+                return null;
+            }
+        }
+
         private async Task<Replay?> ContinueDecoding() 
         {
             await Task.Delay(TimeSpan.FromSeconds(10));
