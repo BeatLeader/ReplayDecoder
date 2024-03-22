@@ -714,7 +714,7 @@ namespace ReplayDecoder
             return replay;
         }
 
-        private async Task<ReplayInfo> DecodeInfo(Stream stream)
+        public async Task<ReplayInfo> DecodeInfo(Stream stream)
         {
                 ReplayInfo result = new ReplayInfo();
 
@@ -773,7 +773,7 @@ namespace ReplayDecoder
             return result;
         }
 
-        private async Task<List<NoteEvent>> DecodeNotes(Stream stream)
+        public async Task<List<NoteEvent>> DecodeNotes(Stream stream)
         {
             int length = await DecodeInt(stream);
             List<NoteEvent> result = new List<NoteEvent>();
@@ -784,7 +784,7 @@ namespace ReplayDecoder
             return result;
         }
 
-        private async Task<List<WallEvent>> DecodeWalls(Stream stream)
+        public async Task<List<WallEvent>> DecodeWalls(Stream stream)
         {
             int length = await DecodeInt(stream);
             List<WallEvent> result = new List<WallEvent>();
@@ -800,7 +800,7 @@ namespace ReplayDecoder
             return result;
         }
 
-        private async Task<List<AutomaticHeight>> DecodeHeight(Stream stream)
+        public async Task<List<AutomaticHeight>> DecodeHeight(Stream stream)
         {
             int length = await DecodeInt(stream);
             List<AutomaticHeight> result = new List<AutomaticHeight>();
@@ -814,7 +814,7 @@ namespace ReplayDecoder
             return result;
         }
 
-        private async Task<List<Pause>> DecodePauses(Stream stream)
+        public async Task<List<Pause>> DecodePauses(Stream stream)
         {
             int length = await DecodeInt(stream);
             List<Pause> result = new List<Pause>();
