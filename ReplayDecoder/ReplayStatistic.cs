@@ -202,9 +202,11 @@ namespace ReplayDecoder
                     if (param.colorType == 0)
                     {
                         if (param.scoringType != ScoringType.SliderTail && param.scoringType != ScoringType.BurstSliderElement) {
-                            result.leftAverageCut[0] += (float)before;
-                            result.leftPreswing += note.noteCutInfo.beforeCutRating;
-                            leftCuts[0]++;
+                            if (note.noteCutInfo.beforeCutRating < 5) {
+                                result.leftAverageCut[0] += (float)before;
+                                result.leftPreswing += note.noteCutInfo.beforeCutRating;
+                                leftCuts[0]++;
+                            }
                         }
                         if (param.scoringType != ScoringType.BurstSliderElement
                          && param.scoringType != ScoringType.BurstSliderHead)
@@ -218,18 +220,22 @@ namespace ReplayDecoder
                             && param.scoringType != ScoringType.BurstSliderHead
                             && param.scoringType != ScoringType.BurstSliderElement)
                         {
-                            result.leftAverageCut[2] += (float)after;
-                            result.leftPostswing += note.noteCutInfo.afterCutRating;
-                            leftCuts[2]++;
+                            if (note.noteCutInfo.afterCutRating < 5) {
+                                result.leftAverageCut[2] += (float)after;
+                                result.leftPostswing += note.noteCutInfo.afterCutRating;
+                                leftCuts[2]++;
+                            }
                         }
                     }
                     else
                     {
                         if (param.scoringType != ScoringType.SliderTail && param.scoringType != ScoringType.BurstSliderElement)
                         {
-                            result.rightAverageCut[0] += (float)before;
-                            result.rightPreswing += note.noteCutInfo.beforeCutRating;
-                            rightCuts[0]++;
+                            if (note.noteCutInfo.beforeCutRating < 5) {
+                                result.rightAverageCut[0] += (float)before;
+                                result.rightPreswing += note.noteCutInfo.beforeCutRating;
+                                rightCuts[0]++;
+                            }
                         }
                         if (param.scoringType != ScoringType.BurstSliderElement 
                          && param.scoringType != ScoringType.BurstSliderHead)
@@ -243,9 +249,11 @@ namespace ReplayDecoder
                             && param.scoringType != ScoringType.BurstSliderHead
                             && param.scoringType != ScoringType.BurstSliderElement)
                         {
-                            result.rightAverageCut[2] += (float)after;
-                            result.rightPostswing += note.noteCutInfo.afterCutRating;
-                            rightCuts[2]++;
+                            if (note.noteCutInfo.afterCutRating < 5) {
+                                result.rightAverageCut[2] += (float)after;
+                                result.rightPostswing += note.noteCutInfo.afterCutRating;
+                                rightCuts[2]++;
+                            }
                         }
                     }
                 }
