@@ -773,7 +773,7 @@ namespace ReplayDecoder
             return result;
         }
 
-        private async Task<List<NoteEvent>> DecodeNotes(Stream stream)
+        public async Task<List<NoteEvent>> DecodeNotes(Stream stream)
         {
             int length = await DecodeInt(stream);
             List<NoteEvent> result = new List<NoteEvent>();
@@ -784,7 +784,7 @@ namespace ReplayDecoder
             return result;
         }
 
-        private async Task<List<WallEvent>> DecodeWalls(Stream stream)
+        public async Task<List<WallEvent>> DecodeWalls(Stream stream)
         {
             int length = await DecodeInt(stream);
             List<WallEvent> result = new List<WallEvent>();
@@ -920,7 +920,7 @@ namespace ReplayDecoder
             return BitConverter.ToInt32(replayData, offset - 4);
         }
 
-        private async Task<byte> DecodeByte(Stream stream)
+        public async Task<byte> DecodeByte(Stream stream)
         {
             EnsureBufferSize(1);
             await stream.ReadAsync(replayData, offset, 1);
@@ -1082,7 +1082,7 @@ namespace ReplayDecoder
             return result;
         }
 
-        private static List<NoteEvent> DecodeNotes(byte[] buffer, ref int pointer)
+        public static List<NoteEvent> DecodeNotes(byte[] buffer, ref int pointer)
         {
             int length = DecodeInt(buffer, ref pointer);
             List<NoteEvent> result = new List<NoteEvent>();
@@ -1093,7 +1093,7 @@ namespace ReplayDecoder
             return result;
         }
 
-        private static List<WallEvent> DecodeWalls(byte[] buffer, ref int pointer)
+        public static List<WallEvent> DecodeWalls(byte[] buffer, ref int pointer)
         {
             int length = DecodeInt(buffer, ref pointer);
             List<WallEvent> result = new List<WallEvent>();

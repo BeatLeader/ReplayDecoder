@@ -153,7 +153,7 @@ namespace ReplayDecoder
                 hitTracker.rightTiming = rightTiming / rightGoodCuts;
             }
 
-            (AccuracyTracker accuracy, List<NoteStruct> structs, int maxCombo, int? maxStreak) = Accuracy(replay);
+            (AccuracyTracker accuracy, List<NoteStruct> structs, int maxCombo, int? maxStreak) = Accuracy(replay.notes, replay.walls);
             result.hitTracker.maxCombo = maxCombo;
             result.hitTracker.maxStreak = maxStreak;
             result.winTracker.totalScore = structs.Last().totalScore;
@@ -167,7 +167,7 @@ namespace ReplayDecoder
             }
         }
 
-        public static (AccuracyTracker, List<NoteStruct>, int, int?) Accuracy(Replay replay)
+        public static (AccuracyTracker, List<NoteStruct>, int, int?) Accuracy(List<NoteEvent> notes, List<WallEvent> walls)
         {
             AccuracyTracker result = new AccuracyTracker();
             result.gridAcc = new List<float>(new float[12]);
@@ -179,7 +179,7 @@ namespace ReplayDecoder
             int[] rightCuts = new int[3];
 
             List<NoteStruct> allStructs = new List<NoteStruct>();
-            foreach (var note in replay.notes)
+            foreach (var note in notes)
             {
                 NoteParams param = new NoteParams(note.noteID);
                 int scoreValue = ScoreForNote(note, param.scoringType);
@@ -269,7 +269,7 @@ namespace ReplayDecoder
                 });
             }
 
-            foreach (var wall in replay.walls)
+            foreach (var wall in walls)
             {
                 allStructs.Add(new NoteStruct
                 {
