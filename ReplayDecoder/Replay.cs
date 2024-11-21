@@ -32,7 +32,7 @@ namespace ReplayDecoder
         public string playerName;
         public string platform;
 
-        public string trackingSytem;
+        public string trackingSystem;
         public string hmd;
         public string controller;
 
@@ -525,7 +525,7 @@ namespace ReplayDecoder
             EncodeString(info.playerName, stream);
             EncodeString(info.platform, stream);
 
-            EncodeString(info.trackingSytem, stream);
+            EncodeString(info.trackingSystem, stream);
             EncodeString(info.hmd, stream);
             EncodeString(info.controller, stream);
 
@@ -777,7 +777,7 @@ namespace ReplayDecoder
                 result.playerName = await DecodeString(stream);
                 result.platform = await DecodeString(stream);
 
-                result.trackingSytem = await DecodeString(stream);
+                result.trackingSystem = await DecodeString(stream);
                 result.hmd = await DecodeString(stream);
                 result.controller = await DecodeString(stream);
 
@@ -1090,7 +1090,7 @@ namespace ReplayDecoder
                 result.playerName = DecodeName(buffer, ref pointer);
                 result.platform = DecodeString(buffer, ref pointer);
 
-                result.trackingSytem = DecodeString(buffer, ref pointer);
+                result.trackingSystem = DecodeString(buffer, ref pointer);
                 result.hmd = DecodeString(buffer, ref pointer);
                 result.controller = DecodeString(buffer, ref pointer);
 
