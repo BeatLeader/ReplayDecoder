@@ -882,11 +882,13 @@ namespace ReplayDecoder
         {
             NoteEvent result = new NoteEvent();
             result.noteID = await DecodeInt(stream);
+            result.noteParams = new NoteParams(result.noteID);
             result.eventTime = await DecodeFloat(stream);
             result.spawnTime = await DecodeFloat(stream);
             result.eventType = (NoteEventType) await DecodeInt(stream);
             if (result.eventType == NoteEventType.good || result.eventType == NoteEventType.bad) {
                 result.noteCutInfo = await DecodeCutInfo(stream);
+                result.score = NoteScore.CalculateNoteScore(result.noteCutInfo, result.noteParams.scoringType);
             }
 
             if (result.noteID == -1 || (result.noteID > 0 && result.noteID < 100000 && result.noteID % 10 == 9)) {
@@ -1221,11 +1223,13 @@ namespace ReplayDecoder
         {
             NoteEvent result = new NoteEvent();
             result.noteID = DecodeInt(buffer, ref pointer);
+            result.noteParams = new NoteParams(result.noteID);
             result.eventTime = DecodeFloat(buffer, ref pointer);
             result.spawnTime = DecodeFloat(buffer, ref pointer);
             result.eventType = (NoteEventType)DecodeInt(buffer, ref pointer);
             if (result.eventType == NoteEventType.good || result.eventType == NoteEventType.bad) {
                 result.noteCutInfo = DecodeCutInfo(buffer, ref pointer);
+                result.score = NoteScore.CalculateNoteScore(result.noteCutInfo, result.noteParams.scoringType);
             }
 
             if (result.noteID == -1 || (result.noteID > 0 && result.noteID < 100000 && result.noteID % 10 == 9)) {
