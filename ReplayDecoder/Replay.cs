@@ -487,7 +487,7 @@ namespace ReplayDecoder
             }
         }
 
-        static void EncodeInfo(ReplayInfo info, BinaryWriter stream)
+        public static void EncodeInfo(ReplayInfo info, BinaryWriter stream)
         {
             EncodeString(info.version, stream);
             EncodeString(info.gameVersion, stream);
@@ -519,7 +519,7 @@ namespace ReplayDecoder
             stream.Write(info.speed);
         }
 
-        static void EncodeFrames(List<Frame> frames, BinaryWriter stream)
+        public static void EncodeFrames(List<Frame> frames, BinaryWriter stream)
         {
             stream.Write((uint)frames.Count);
             foreach (var frame in frames)
@@ -535,7 +535,7 @@ namespace ReplayDecoder
             }
         }
 
-        static void EncodeNotes(List<NoteEvent> notes, BinaryWriter stream)
+        public static void EncodeNotes(List<NoteEvent> notes, BinaryWriter stream)
         {
             stream.Write((uint)notes.Count);
             foreach (var note in notes)
@@ -550,7 +550,7 @@ namespace ReplayDecoder
             }
         }
 
-        static void EncodeWalls(List<WallEvent> walls, BinaryWriter stream)
+        public static void EncodeWalls(List<WallEvent> walls, BinaryWriter stream)
         {
             stream.Write((uint)walls.Count);
             foreach (var wall in walls)
@@ -562,7 +562,7 @@ namespace ReplayDecoder
             }
         }
 
-        static void EncodeHeights(List<AutomaticHeight> heights, BinaryWriter stream)
+        public static void EncodeHeights(List<AutomaticHeight> heights, BinaryWriter stream)
         {
             stream.Write((uint)heights.Count);
             foreach (var height in heights)
@@ -572,7 +572,7 @@ namespace ReplayDecoder
             }
         }
 
-        static void EncodePauses(List<Pause> pauses, BinaryWriter stream)
+        public static void EncodePauses(List<Pause> pauses, BinaryWriter stream)
         {
             stream.Write((uint)pauses.Count);
             foreach (var pause in pauses)
@@ -1003,7 +1003,7 @@ namespace ReplayDecoder
                             break;
                         case StructType.heights:
                             offsets.Heights = pointer;
-                            replay.heights = DecodeHeight(buffer, ref pointer);
+                            replay.heights = DecodeHeights(buffer, ref pointer);
                             break;
                         case StructType.pauses:
                             offsets.Pauses = pointer;
@@ -1020,7 +1020,7 @@ namespace ReplayDecoder
             }
         }
 
-        private static ReplayInfo DecodeInfo(byte[] buffer, ref int pointer)
+        public static ReplayInfo DecodeInfo(byte[] buffer, ref int pointer)
         {
                 ReplayInfo result = new ReplayInfo();
 
@@ -1056,7 +1056,7 @@ namespace ReplayDecoder
                 return result;
          }
 
-        private static List<Frame> DecodeFrames(byte[] buffer, ref int pointer)
+        public static List<Frame> DecodeFrames(byte[] buffer, ref int pointer)
         {
             int length = DecodeInt(buffer, ref pointer);
             List<Frame> result = new List<Frame>();
@@ -1070,7 +1070,7 @@ namespace ReplayDecoder
             return result;
         }
 
-        private static Frame DecodeFrame(byte[] buffer, ref int pointer)
+        public static Frame DecodeFrame(byte[] buffer, ref int pointer)
         {
             Frame result = new Frame();
             result.time = DecodeFloat(buffer, ref pointer);
@@ -1109,7 +1109,7 @@ namespace ReplayDecoder
             return result;
         }
 
-        private static List<AutomaticHeight> DecodeHeight(byte[] buffer, ref int pointer)
+        public static List<AutomaticHeight> DecodeHeights(byte[] buffer, ref int pointer)
         {
             int length = DecodeInt(buffer, ref pointer);
             List<AutomaticHeight> result = new List<AutomaticHeight>();
@@ -1123,7 +1123,7 @@ namespace ReplayDecoder
             return result;
         }
 
-        private static List<Pause> DecodePauses(byte[] buffer, ref int pointer)
+        public static List<Pause> DecodePauses(byte[] buffer, ref int pointer)
         {
             int length = DecodeInt(buffer, ref pointer);
             List<Pause> result = new List<Pause>();
