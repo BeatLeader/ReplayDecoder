@@ -273,7 +273,8 @@ namespace ReplayDecoder
             {
                 allStructs.Add(new NoteStruct
                 {
-                    time = wall.time,
+                    time = wall.spawnTime > wall.time ? wall.spawnTime : wall.time,
+                    spawnTime = wall.spawnTime > wall.time ? wall.time : wall.spawnTime,
                     id = wall.wallID,
                     score = -5
                 });
