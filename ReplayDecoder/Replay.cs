@@ -471,7 +471,7 @@ namespace ReplayDecoder
 
             var offsets = new ReplayOffsets();
 
-            for (int a = 0; a < ((int)StructType.pauses) + 1; a++)
+            for (int a = 0; a <= Enum.GetValues(typeof(StructType)).Cast<int>().Max(); a++)
             {
                 StructType type = (StructType)a;
                 stream.Write((byte)a);
@@ -731,7 +731,7 @@ namespace ReplayDecoder
 
         private async Task<Replay?> ContinueDecoding() 
         {
-            for (int a = (int)StructType.frames; a < ((int)StructType.pauses) + 1; a++) {
+            for (int a = (int)StructType.frames; a <= Enum.GetValues(typeof(StructType)).Cast<int>().Max(); a++) {
                 StructType type = (StructType)await DecodeByte(stream);
 
                 switch (type)
@@ -755,6 +755,14 @@ namespace ReplayDecoder
                     case StructType.pauses:
                         offsets.Pauses = offset;
                         replay.pauses = await DecodePauses(stream);
+                        break;
+                    case StructType.saberOffsets:
+                        offsets.SaberOffsets = offset;
+                        replay.saberOffsets = await DecodeSaberOffsets(stream);;
+                        break;
+                    case StructType.customData:
+                        offsets.CustomData = offset;
+                        replay.customData = await DecodeCustomData(stream);
                         break;
                 }
             }
@@ -877,6 +885,30 @@ namespace ReplayDecoder
             }
             return result;
         }
+        
+        public async Task<SaberOffsets> DecodeSaberOffsets(Stream stream)
+        {
+            var result = new SaberOffsets();
+            result.leftSaberLocalPosition = await DecodeVector3(stream);
+            result.leftSaberLocalRotation = await DecodeQuaternion(stream);
+            result.rightSaberLocalPosition = await DecodeVector3(stream);
+            result.rightSaberLocalRotation = await DecodeQuaternion(stream);
+            return result;
+        }
+        
+        public async Task<Dictionary<string, byte[]>> DecodeCustomData(Stream stream)
+        {
+            var result = new Dictionary<string, byte[]>();
+            var count = await DecodeInt(stream);
+            for(var i = 0; i < count; i++)
+            {
+                var key = await DecodeString(stream);
+                var value = await DecodeByteArray(stream);
+                result[key] = value;
+            }
+            return result;
+        }
+
         private async Task<NoteEvent> DecodeNote(Stream stream)
         {
             NoteEvent result = new NoteEvent();
@@ -1013,6 +1045,14 @@ namespace ReplayDecoder
             offset++;
             return BitConverter.ToBoolean(replayData, offset - 1);
         }
+        
+        private async Task<byte[]> DecodeByteArray(Stream stream)
+        {
+            var count = await DecodeInt(stream);
+            var result = new byte[count];
+            await stream.ReadAsync(result, 0, count);
+            return result;
+        }
     }
 
     public static class ReplayDecoder
@@ -1031,7 +1071,7 @@ namespace ReplayDecoder
                 Replay replay = new Replay();
                 ReplayOffsets offsets = new ReplayOffsets();
 
-                for (int a = 0; a < ((int)StructType.pauses) + 1 && pointer < arrayLength; a++)
+                for (int a = 0; a <= Enum.GetValues(typeof(StructType)).Cast<int>().Max() && pointer < arrayLength; a++)
                 {
                     StructType type = (StructType)buffer[pointer++];
 
