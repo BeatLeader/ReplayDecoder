@@ -153,7 +153,7 @@ namespace ReplayDecoder
                 hitTracker.rightTiming = rightTiming / rightGoodCuts;
             }
 
-            (AccuracyTracker accuracy, List<NoteStruct> structs, int maxCombo, int? maxStreak) = Accuracy(replay);
+            (AccuracyTracker accuracy, List<NoteStruct> structs, int maxCombo, int? maxStreak) = Accuracy(replay.notes, replay.walls);
             result.hitTracker.maxCombo = maxCombo;
             result.hitTracker.maxStreak = maxStreak;
             result.winTracker.totalScore = structs.Last().totalScore;
@@ -167,7 +167,7 @@ namespace ReplayDecoder
             }
         }
 
-        public static (AccuracyTracker, List<NoteStruct>, int, int?) Accuracy(Replay replay)
+        public static (AccuracyTracker, List<NoteStruct>, int, int?) Accuracy(List<NoteEvent> notes, List<WallEvent> walls)
         {
             AccuracyTracker result = new AccuracyTracker();
             result.gridAcc = new List<float>(new float[12]);
@@ -179,7 +179,7 @@ namespace ReplayDecoder
             int[] rightCuts = new int[3];
 
             List<NoteStruct> allStructs = new List<NoteStruct>();
-            foreach (var note in replay.notes)
+            foreach (var note in notes)
             {
                 NoteParams param = new NoteParams(note.noteID);
                 int scoreValue = ScoreForNote(note, param.scoringType);
@@ -202,9 +202,11 @@ namespace ReplayDecoder
                     if (param.colorType == 0)
                     {
                         if (param.scoringType != ScoringType.SliderTail && param.scoringType != ScoringType.BurstSliderElement) {
-                            result.leftAverageCut[0] += (float)before;
-                            result.leftPreswing += note.noteCutInfo.beforeCutRating;
-                            leftCuts[0]++;
+                            if (note.noteCutInfo.beforeCutRating < 5) {
+                                result.leftAverageCut[0] += (float)before;
+                                result.leftPreswing += note.noteCutInfo.beforeCutRating;
+                                leftCuts[0]++;
+                            }
                         }
                         if (param.scoringType != ScoringType.BurstSliderElement
                          && param.scoringType != ScoringType.BurstSliderHead)
@@ -218,18 +220,22 @@ namespace ReplayDecoder
                             && param.scoringType != ScoringType.BurstSliderHead
                             && param.scoringType != ScoringType.BurstSliderElement)
                         {
-                            result.leftAverageCut[2] += (float)after;
-                            result.leftPostswing += note.noteCutInfo.afterCutRating;
-                            leftCuts[2]++;
+                            if (note.noteCutInfo.afterCutRating < 5) {
+                                result.leftAverageCut[2] += (float)after;
+                                result.leftPostswing += note.noteCutInfo.afterCutRating;
+                                leftCuts[2]++;
+                            }
                         }
                     }
                     else
                     {
                         if (param.scoringType != ScoringType.SliderTail && param.scoringType != ScoringType.BurstSliderElement)
                         {
-                            result.rightAverageCut[0] += (float)before;
-                            result.rightPreswing += note.noteCutInfo.beforeCutRating;
-                            rightCuts[0]++;
+                            if (note.noteCutInfo.beforeCutRating < 5) {
+                                result.rightAverageCut[0] += (float)before;
+                                result.rightPreswing += note.noteCutInfo.beforeCutRating;
+                                rightCuts[0]++;
+                            }
                         }
                         if (param.scoringType != ScoringType.BurstSliderElement 
                          && param.scoringType != ScoringType.BurstSliderHead)
@@ -243,9 +249,11 @@ namespace ReplayDecoder
                             && param.scoringType != ScoringType.BurstSliderHead
                             && param.scoringType != ScoringType.BurstSliderElement)
                         {
-                            result.rightAverageCut[2] += (float)after;
-                            result.rightPostswing += note.noteCutInfo.afterCutRating;
-                            rightCuts[2]++;
+                            if (note.noteCutInfo.afterCutRating < 5) {
+                                result.rightAverageCut[2] += (float)after;
+                                result.rightPostswing += note.noteCutInfo.afterCutRating;
+                                rightCuts[2]++;
+                            }
                         }
                     }
                 }
@@ -261,11 +269,12 @@ namespace ReplayDecoder
                 });
             }
 
-            foreach (var wall in replay.walls)
+            foreach (var wall in walls)
             {
                 allStructs.Add(new NoteStruct
                 {
-                    time = wall.time,
+                    time = wall.spawnTime > wall.time ? wall.spawnTime : wall.time,
+                    spawnTime = wall.spawnTime > wall.time ? wall.time : wall.spawnTime,
                     id = wall.wallID,
                     score = -5
                 });

@@ -8,5 +8,7 @@
         public int Walls { get; set; }
         public int Heights { get; set; }
         public int Pauses { get; set; }
+        public int SaberOffsets { get; set; }
+        public int CustomData { get; set; }
     }
 }

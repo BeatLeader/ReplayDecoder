@@ -18,6 +18,8 @@ namespace ReplayDecoder
         public List<WallEvent> walls = new List<WallEvent>();
         public List<AutomaticHeight> heights = new List<AutomaticHeight>();
         public List<Pause> pauses = new List<Pause>();
+        public SaberOffsets saberOffsets = new SaberOffsets();
+        public Dictionary<string, byte[]> customData = new Dictionary<string, byte[]>();
     }
 
     public class ReplayInfo
@@ -30,7 +32,7 @@ namespace ReplayDecoder
         public string playerName;
         public string platform;
 
-        public string trackingSytem;
+        public string trackingSystem;
         public string hmd;
         public string controller;
 
@@ -160,6 +162,13 @@ namespace ReplayDecoder
         public float time;
     };
 
+    public class SaberOffsets {
+        public Vector3 leftSaberLocalPosition;
+        public Quaternion leftSaberLocalRotation;
+        public Vector3 rightSaberLocalPosition;
+        public Quaternion rightSaberLocalRotation;
+    };
+
     public class NoteCutInfo
     {
         public bool speedOK;
@@ -186,7 +195,9 @@ namespace ReplayDecoder
         notes = 2,
         walls = 3,
         heights = 4,
-        pauses = 5
+        pauses = 5,
+        saberOffsets = 6,
+        customData = 7
     }
 
     public struct Vector3
@@ -453,12 +464,14 @@ namespace ReplayDecoder
 
     public static class ReplayEncoder
     {
-        public static void Encode(Replay replay, BinaryWriter stream)
+        public static ReplayOffsets Encode(Replay replay, BinaryWriter stream)
         {
             stream.Write(0x442d3d69);
             stream.Write((byte)1);
 
-            for (int a = 0; a < ((int)StructType.pauses) + 1; a++)
+            var offsets = new ReplayOffsets();
+
+            for (int a = 0; a <= Enum.GetValues(typeof(StructType)).Cast<int>().Max(); a++)
             {
                 StructType type = (StructType)a;
                 stream.Write((byte)a);
@@ -469,25 +482,40 @@ namespace ReplayDecoder
                         EncodeInfo(replay.info, stream);
                         break;
                     case StructType.frames:
+                        offsets.Frames = (int)stream.BaseStream.Position;
                         EncodeFrames(replay.frames, stream);
                         break;
                     case StructType.notes:
+                        offsets.Notes = (int)stream.BaseStream.Position;
                         EncodeNotes(replay.notes, stream);
                         break;
                     case StructType.walls:
+                        offsets.Walls = (int)stream.BaseStream.Position;
                         EncodeWalls(replay.walls, stream);
                         break;
                     case StructType.heights:
+                        offsets.Heights = (int)stream.BaseStream.Position;
                         EncodeHeights(replay.heights, stream);
                         break;
                     case StructType.pauses:
+                        offsets.Pauses = (int)stream.BaseStream.Position;
                         EncodePauses(replay.pauses, stream);
+                        break;
+                    case StructType.saberOffsets:
+                        offsets.SaberOffsets = (int)stream.BaseStream.Position;
+                        EncodeSaberOffsets(replay.saberOffsets, stream);
+                        break;
+                    case StructType.customData:
+                        offsets.CustomData = (int)stream.BaseStream.Position;
+                        EncodeCustomData(replay.customData, stream);
                         break;
                 }
             }
+
+            return offsets;
         }
 
-        static void EncodeInfo(ReplayInfo info, BinaryWriter stream)
+        public static void EncodeInfo(ReplayInfo info, BinaryWriter stream)
         {
             EncodeString(info.version, stream);
             EncodeString(info.gameVersion, stream);
@@ -497,7 +525,7 @@ namespace ReplayDecoder
             EncodeString(info.playerName, stream);
             EncodeString(info.platform, stream);
 
-            EncodeString(info.trackingSytem, stream);
+            EncodeString(info.trackingSystem, stream);
             EncodeString(info.hmd, stream);
             EncodeString(info.controller, stream);
 
@@ -519,7 +547,7 @@ namespace ReplayDecoder
             stream.Write(info.speed);
         }
 
-        static void EncodeFrames(List<Frame> frames, BinaryWriter stream)
+        public static void EncodeFrames(List<Frame> frames, BinaryWriter stream)
         {
             stream.Write((uint)frames.Count);
             foreach (var frame in frames)
@@ -535,7 +563,7 @@ namespace ReplayDecoder
             }
         }
 
-        static void EncodeNotes(List<NoteEvent> notes, BinaryWriter stream)
+        public static void EncodeNotes(List<NoteEvent> notes, BinaryWriter stream)
         {
             stream.Write((uint)notes.Count);
             foreach (var note in notes)
@@ -550,7 +578,7 @@ namespace ReplayDecoder
             }
         }
 
-        static void EncodeWalls(List<WallEvent> walls, BinaryWriter stream)
+        public static void EncodeWalls(List<WallEvent> walls, BinaryWriter stream)
         {
             stream.Write((uint)walls.Count);
             foreach (var wall in walls)
@@ -562,7 +590,7 @@ namespace ReplayDecoder
             }
         }
 
-        static void EncodeHeights(List<AutomaticHeight> heights, BinaryWriter stream)
+        public static void EncodeHeights(List<AutomaticHeight> heights, BinaryWriter stream)
         {
             stream.Write((uint)heights.Count);
             foreach (var height in heights)
@@ -572,13 +600,30 @@ namespace ReplayDecoder
             }
         }
 
-        static void EncodePauses(List<Pause> pauses, BinaryWriter stream)
+        public static void EncodePauses(List<Pause> pauses, BinaryWriter stream)
         {
             stream.Write((uint)pauses.Count);
             foreach (var pause in pauses)
             {
                 stream.Write(pause.duration);
                 stream.Write(pause.time);
+            }
+        }
+
+        static void EncodeSaberOffsets(SaberOffsets saberOffsets, BinaryWriter stream)
+        {
+            EncodeVector(saberOffsets.leftSaberLocalPosition, stream);
+            EncodeQuaternion(saberOffsets.leftSaberLocalRotation, stream);
+            EncodeVector(saberOffsets.rightSaberLocalPosition, stream);
+            EncodeQuaternion(saberOffsets.rightSaberLocalRotation, stream);
+        }
+
+        static void EncodeCustomData(Dictionary<string, byte[]> customData, BinaryWriter stream)
+        {
+            stream.Write(customData.Count);
+            foreach (var pair in customData) {
+                EncodeString(pair.Key, stream);
+                EncodeByteArray(pair.Value, stream);
             }
         }
 
@@ -621,6 +666,12 @@ namespace ReplayDecoder
             stream.Write(quaternion.y);
             stream.Write(quaternion.z);
             stream.Write(quaternion.w);
+        }
+
+        static void EncodeByteArray(byte[] value, BinaryWriter stream)
+        {
+            stream.Write(value.Length);
+            stream.Write(value);
         }
     }
 
@@ -680,8 +731,7 @@ namespace ReplayDecoder
 
         private async Task<Replay?> ContinueDecoding() 
         {
-            await Task.Delay(TimeSpan.FromSeconds(10));
-            for (int a = (int)StructType.frames; a < ((int)StructType.pauses) + 1; a++) {
+            for (int a = (int)StructType.frames; a <= Enum.GetValues(typeof(StructType)).Cast<int>().Max(); a++) {
                 StructType type = (StructType)await DecodeByte(stream);
 
                 switch (type)
@@ -706,6 +756,14 @@ namespace ReplayDecoder
                         offsets.Pauses = offset;
                         replay.pauses = await DecodePauses(stream);
                         break;
+                    case StructType.saberOffsets:
+                        offsets.SaberOffsets = offset;
+                        replay.saberOffsets = await DecodeSaberOffsets(stream);;
+                        break;
+                    case StructType.customData:
+                        offsets.CustomData = offset;
+                        replay.customData = await DecodeCustomData(stream);
+                        break;
                 }
             }
 
@@ -726,7 +784,7 @@ namespace ReplayDecoder
                 result.playerName = await DecodeString(stream);
                 result.platform = await DecodeString(stream);
 
-                result.trackingSytem = await DecodeString(stream);
+                result.trackingSystem = await DecodeString(stream);
                 result.hmd = await DecodeString(stream);
                 result.controller = await DecodeString(stream);
 
@@ -827,16 +885,41 @@ namespace ReplayDecoder
             }
             return result;
         }
+        
+        public async Task<SaberOffsets> DecodeSaberOffsets(Stream stream)
+        {
+            var result = new SaberOffsets();
+            result.leftSaberLocalPosition = await DecodeVector3(stream);
+            result.leftSaberLocalRotation = await DecodeQuaternion(stream);
+            result.rightSaberLocalPosition = await DecodeVector3(stream);
+            result.rightSaberLocalRotation = await DecodeQuaternion(stream);
+            return result;
+        }
+        
+        public async Task<Dictionary<string, byte[]>> DecodeCustomData(Stream stream)
+        {
+            var result = new Dictionary<string, byte[]>();
+            var count = await DecodeInt(stream);
+            for(var i = 0; i < count; i++)
+            {
+                var key = await DecodeString(stream);
+                var value = await DecodeByteArray(stream);
+                result[key] = value;
+            }
+            return result;
+        }
 
         private async Task<NoteEvent> DecodeNote(Stream stream)
         {
             NoteEvent result = new NoteEvent();
             result.noteID = await DecodeInt(stream);
+            result.noteParams = new NoteParams(result.noteID);
             result.eventTime = await DecodeFloat(stream);
             result.spawnTime = await DecodeFloat(stream);
             result.eventType = (NoteEventType) await DecodeInt(stream);
             if (result.eventType == NoteEventType.good || result.eventType == NoteEventType.bad) {
                 result.noteCutInfo = await DecodeCutInfo(stream);
+                result.score = NoteScore.CalculateNoteScore(result.noteCutInfo, result.noteParams.scoringType);
             }
 
             if (result.noteID == -1 || (result.noteID > 0 && result.noteID < 100000 && result.noteID % 10 == 9)) {
@@ -920,7 +1003,7 @@ namespace ReplayDecoder
             return BitConverter.ToInt32(replayData, offset - 4);
         }
 
-        private async Task<byte> DecodeByte(Stream stream)
+        public async Task<byte> DecodeByte(Stream stream)
         {
             EnsureBufferSize(1);
             await stream.ReadAsync(replayData, offset, 1);
@@ -962,6 +1045,14 @@ namespace ReplayDecoder
             offset++;
             return BitConverter.ToBoolean(replayData, offset - 1);
         }
+        
+        private async Task<byte[]> DecodeByteArray(Stream stream)
+        {
+            var count = await DecodeInt(stream);
+            var result = new byte[count];
+            await stream.ReadAsync(result, 0, count);
+            return result;
+        }
     }
 
     public static class ReplayDecoder
@@ -980,7 +1071,7 @@ namespace ReplayDecoder
                 Replay replay = new Replay();
                 ReplayOffsets offsets = new ReplayOffsets();
 
-                for (int a = 0; a < ((int)StructType.pauses) + 1 && pointer < arrayLength; a++)
+                for (int a = 0; a <= Enum.GetValues(typeof(StructType)).Cast<int>().Max() && pointer < arrayLength; a++)
                 {
                     StructType type = (StructType)buffer[pointer++];
 
@@ -1003,11 +1094,19 @@ namespace ReplayDecoder
                             break;
                         case StructType.heights:
                             offsets.Heights = pointer;
-                            replay.heights = DecodeHeight(buffer, ref pointer);
+                            replay.heights = DecodeHeights(buffer, ref pointer);
                             break;
                         case StructType.pauses:
                             offsets.Pauses = pointer;
                             replay.pauses = DecodePauses(buffer, ref pointer);
+                            break;
+                        case StructType.saberOffsets:
+                            offsets.SaberOffsets = pointer;
+                            replay.saberOffsets = DecodeSaberOffsets(buffer, ref pointer);
+                            break;
+                        case StructType.customData:
+                            offsets.CustomData = pointer;
+                            replay.customData = DecodeCustomData(buffer, ref pointer);
                             break;
                         }
                 }
@@ -1020,7 +1119,7 @@ namespace ReplayDecoder
             }
         }
 
-        private static ReplayInfo DecodeInfo(byte[] buffer, ref int pointer)
+        public static ReplayInfo DecodeInfo(byte[] buffer, ref int pointer)
         {
                 ReplayInfo result = new ReplayInfo();
 
@@ -1032,7 +1131,7 @@ namespace ReplayDecoder
                 result.playerName = DecodeName(buffer, ref pointer);
                 result.platform = DecodeString(buffer, ref pointer);
 
-                result.trackingSytem = DecodeString(buffer, ref pointer);
+                result.trackingSystem = DecodeString(buffer, ref pointer);
                 result.hmd = DecodeString(buffer, ref pointer);
                 result.controller = DecodeString(buffer, ref pointer);
 
@@ -1056,7 +1155,7 @@ namespace ReplayDecoder
                 return result;
          }
 
-        private static List<Frame> DecodeFrames(byte[] buffer, ref int pointer)
+        public static List<Frame> DecodeFrames(byte[] buffer, ref int pointer)
         {
             int length = DecodeInt(buffer, ref pointer);
             List<Frame> result = new List<Frame>();
@@ -1070,7 +1169,7 @@ namespace ReplayDecoder
             return result;
         }
 
-        private static Frame DecodeFrame(byte[] buffer, ref int pointer)
+        public static Frame DecodeFrame(byte[] buffer, ref int pointer)
         {
             Frame result = new Frame();
             result.time = DecodeFloat(buffer, ref pointer);
@@ -1082,7 +1181,7 @@ namespace ReplayDecoder
             return result;
         }
 
-        private static List<NoteEvent> DecodeNotes(byte[] buffer, ref int pointer)
+        public static List<NoteEvent> DecodeNotes(byte[] buffer, ref int pointer)
         {
             int length = DecodeInt(buffer, ref pointer);
             List<NoteEvent> result = new List<NoteEvent>();
@@ -1093,7 +1192,7 @@ namespace ReplayDecoder
             return result;
         }
 
-        private static List<WallEvent> DecodeWalls(byte[] buffer, ref int pointer)
+        public static List<WallEvent> DecodeWalls(byte[] buffer, ref int pointer)
         {
             int length = DecodeInt(buffer, ref pointer);
             List<WallEvent> result = new List<WallEvent>();
@@ -1109,7 +1208,7 @@ namespace ReplayDecoder
             return result;
         }
 
-        private static List<AutomaticHeight> DecodeHeight(byte[] buffer, ref int pointer)
+        public static List<AutomaticHeight> DecodeHeights(byte[] buffer, ref int pointer)
         {
             int length = DecodeInt(buffer, ref pointer);
             List<AutomaticHeight> result = new List<AutomaticHeight>();
@@ -1123,7 +1222,7 @@ namespace ReplayDecoder
             return result;
         }
 
-        private static List<Pause> DecodePauses(byte[] buffer, ref int pointer)
+        public static List<Pause> DecodePauses(byte[] buffer, ref int pointer)
         {
             int length = DecodeInt(buffer, ref pointer);
             List<Pause> result = new List<Pause>();
@@ -1137,15 +1236,39 @@ namespace ReplayDecoder
             return result;
         }
 
+        private static SaberOffsets DecodeSaberOffsets(byte[] buffer, ref int pointer)
+        {
+            var result = new SaberOffsets();
+            result.leftSaberLocalPosition = DecodeVector3(buffer, ref pointer);
+            result.leftSaberLocalRotation = DecodeQuaternion(buffer, ref pointer);
+            result.rightSaberLocalPosition = DecodeVector3(buffer, ref pointer);
+            result.rightSaberLocalRotation = DecodeQuaternion(buffer, ref pointer);
+            return result;
+        }
+        
+        private static Dictionary<string, byte[]> DecodeCustomData(byte[] buffer, ref int pointer)
+        {
+            var result = new Dictionary<string, byte[]>();
+            var count = DecodeInt(buffer, ref pointer);
+            for (var i = 0; i < count; i++) {
+                var key = DecodeString(buffer, ref pointer);
+                var value = DecodeByteArray(buffer, ref pointer);
+                result[key] = value;
+            }
+            return result;
+        }
+
         private static NoteEvent DecodeNote(byte[] buffer, ref int pointer)
         {
             NoteEvent result = new NoteEvent();
             result.noteID = DecodeInt(buffer, ref pointer);
+            result.noteParams = new NoteParams(result.noteID);
             result.eventTime = DecodeFloat(buffer, ref pointer);
             result.spawnTime = DecodeFloat(buffer, ref pointer);
             result.eventType = (NoteEventType)DecodeInt(buffer, ref pointer);
             if (result.eventType == NoteEventType.good || result.eventType == NoteEventType.bad) {
                 result.noteCutInfo = DecodeCutInfo(buffer, ref pointer);
+                result.score = NoteScore.CalculateNoteScore(result.noteCutInfo, result.noteParams.scoringType);
             }
 
             if (result.noteID == -1 || (result.noteID > 0 && result.noteID < 100000 && result.noteID % 10 == 9)) {
@@ -1265,6 +1388,14 @@ namespace ReplayDecoder
             pointer++;
             return result;
         }
+
+        private static byte[] DecodeByteArray(byte[] buffer, ref int pointer) {
+            var count = DecodeInt(buffer, ref pointer);
+            var result = new byte[count];
+            Array.Copy(buffer, pointer, result, 0, count);
+            pointer += count;
+            return result;
+        }
     }
 
     public class NoteScore
@@ -1299,8 +1430,8 @@ namespace ReplayDecoder
                 }
                 else
                 {
-                    before_cut_raw_score = (int)(70 * cut.beforeCutRating);
-                    before_cut_raw_score = RoundHalfUp(before_cut_raw_score);
+                    float score = 70 * cut.beforeCutRating;
+                    before_cut_raw_score = RoundHalfUp(score);
                     before_cut_raw_score = Clamp(before_cut_raw_score, 0, 70);
                 }
             }
@@ -1319,8 +1450,8 @@ namespace ReplayDecoder
                 }
                 else
                 {
-                    after_cut_raw_score = (int)(30 * cut.afterCutRating);
-                    after_cut_raw_score = RoundHalfUp(after_cut_raw_score);
+                    float score = 30 * cut.afterCutRating;
+                    after_cut_raw_score = RoundHalfUp(score);
                     after_cut_raw_score = Clamp(after_cut_raw_score, 0, 30);
                 }
             }
