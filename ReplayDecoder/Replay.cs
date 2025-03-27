@@ -32,7 +32,7 @@ namespace ReplayDecoder
         public string playerName;
         public string platform;
 
-        public string trackingSytem;
+        public string trackingSystem;
         public string hmd;
         public string controller;
 
@@ -525,7 +525,7 @@ namespace ReplayDecoder
             EncodeString(info.playerName, stream);
             EncodeString(info.platform, stream);
 
-            EncodeString(info.trackingSytem, stream);
+            EncodeString(info.trackingSystem, stream);
             EncodeString(info.hmd, stream);
             EncodeString(info.controller, stream);
 
@@ -731,7 +731,6 @@ namespace ReplayDecoder
 
         private async Task<Replay?> ContinueDecoding() 
         {
-            await Task.Delay(TimeSpan.FromSeconds(10));
             for (int a = (int)StructType.frames; a <= Enum.GetValues(typeof(StructType)).Cast<int>().Max(); a++) {
                 StructType type = (StructType)await DecodeByte(stream);
 
@@ -785,7 +784,7 @@ namespace ReplayDecoder
                 result.playerName = await DecodeString(stream);
                 result.platform = await DecodeString(stream);
 
-                result.trackingSytem = await DecodeString(stream);
+                result.trackingSystem = await DecodeString(stream);
                 result.hmd = await DecodeString(stream);
                 result.controller = await DecodeString(stream);
 
@@ -914,11 +913,13 @@ namespace ReplayDecoder
         {
             NoteEvent result = new NoteEvent();
             result.noteID = await DecodeInt(stream);
+            result.noteParams = new NoteParams(result.noteID);
             result.eventTime = await DecodeFloat(stream);
             result.spawnTime = await DecodeFloat(stream);
             result.eventType = (NoteEventType) await DecodeInt(stream);
             if (result.eventType == NoteEventType.good || result.eventType == NoteEventType.bad) {
                 result.noteCutInfo = await DecodeCutInfo(stream);
+                result.score = NoteScore.CalculateNoteScore(result.noteCutInfo, result.noteParams.scoringType);
             }
 
             if (result.noteID == -1 || (result.noteID > 0 && result.noteID < 100000 && result.noteID % 10 == 9)) {
@@ -1130,7 +1131,7 @@ namespace ReplayDecoder
                 result.playerName = DecodeName(buffer, ref pointer);
                 result.platform = DecodeString(buffer, ref pointer);
 
-                result.trackingSytem = DecodeString(buffer, ref pointer);
+                result.trackingSystem = DecodeString(buffer, ref pointer);
                 result.hmd = DecodeString(buffer, ref pointer);
                 result.controller = DecodeString(buffer, ref pointer);
 
@@ -1261,11 +1262,13 @@ namespace ReplayDecoder
         {
             NoteEvent result = new NoteEvent();
             result.noteID = DecodeInt(buffer, ref pointer);
+            result.noteParams = new NoteParams(result.noteID);
             result.eventTime = DecodeFloat(buffer, ref pointer);
             result.spawnTime = DecodeFloat(buffer, ref pointer);
             result.eventType = (NoteEventType)DecodeInt(buffer, ref pointer);
             if (result.eventType == NoteEventType.good || result.eventType == NoteEventType.bad) {
                 result.noteCutInfo = DecodeCutInfo(buffer, ref pointer);
+                result.score = NoteScore.CalculateNoteScore(result.noteCutInfo, result.noteParams.scoringType);
             }
 
             if (result.noteID == -1 || (result.noteID > 0 && result.noteID < 100000 && result.noteID % 10 == 9)) {
@@ -1427,8 +1430,8 @@ namespace ReplayDecoder
                 }
                 else
                 {
-                    before_cut_raw_score = (int)(70 * cut.beforeCutRating);
-                    before_cut_raw_score = RoundHalfUp(before_cut_raw_score);
+                    float score = 70 * cut.beforeCutRating;
+                    before_cut_raw_score = RoundHalfUp(score);
                     before_cut_raw_score = Clamp(before_cut_raw_score, 0, 70);
                 }
             }
@@ -1447,8 +1450,8 @@ namespace ReplayDecoder
                 }
                 else
                 {
-                    after_cut_raw_score = (int)(30 * cut.afterCutRating);
-                    after_cut_raw_score = RoundHalfUp(after_cut_raw_score);
+                    float score = 30 * cut.afterCutRating;
+                    after_cut_raw_score = RoundHalfUp(score);
                     after_cut_raw_score = Clamp(after_cut_raw_score, 0, 30);
                 }
             }
