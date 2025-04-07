@@ -16,6 +16,7 @@ namespace ReplayDecoder
         public int maxScore;
         public float accuracy;
         public int combo;
+        public float energy;
     }
 
     class MultiplierCounter
@@ -69,99 +70,104 @@ namespace ReplayDecoder
         public static (ScoreStatistic?, string?) ProcessReplay(Replay replay)
         {
             try {
-            ScoreStatistic result = new ScoreStatistic();
-            float firstNoteTime = replay.notes.FirstOrDefault()?.eventTime ?? 0.0f;
-            float lastNoteTime = replay.notes.LastOrDefault()?.eventTime ?? 0.0f;
+                ScoreStatistic result = new ScoreStatistic();
+                float firstNoteTime = replay.notes.FirstOrDefault()?.eventTime ?? 0.0f;
+                float lastNoteTime = replay.notes.LastOrDefault()?.eventTime ?? 0.0f;
 
-            var filteredPauses = replay.pauses.Where(p => p.time >= firstNoteTime && p.time <= lastNoteTime);
-            result.winTracker = new WinTracker
-            {
-                won = replay.info.failTime < 0.01,
-                endTime = (replay.frames.LastOrDefault() != null) ? replay.frames.Last().time : 0,
-                nbOfPause = filteredPauses.Count(),
-                totalPauseDuration = filteredPauses.Count() > 0 ? filteredPauses.Sum(p => p.duration) : 0,
-                jumpDistance = replay.info.jumpDistance,
-                averageHeight = replay.heights.Count() > 0 ? replay.heights.Average(h => h.height) : replay.info.height,
-                averageHeadPosition = new AveragePosition {
-                    x = replay.frames.Average(f => f.head.position.x),
-                    y = replay.frames.Average(f => f.head.position.y),
-                    z = replay.frames.Average(f => f.head.position.z),
-                }
-            };
-
-            HitTracker hitTracker = new HitTracker();
-            result.hitTracker = hitTracker;
-
-            int leftGoodCuts = 0, rightGoodCuts = 0;
-            float leftTiming = 0, rightTiming = 0;
-
-            foreach (var item in replay.notes)
-            {
-                NoteParams param = new NoteParams(item.noteID);
-                switch (item.eventType)
+                var filteredPauses = replay.pauses.Where(p => p.time >= firstNoteTime && p.time <= lastNoteTime);
+                result.winTracker = new WinTracker
                 {
-                    case NoteEventType.bad:
-                        if (item.noteCutInfo.saberType == 0)
-                        {
-                            hitTracker.leftBadCuts++;
-                        }
-                        else
-                        {
-                            hitTracker.rightBadCuts++;
-                        }
-                        break;
-                    case NoteEventType.miss:
-                        if (param.colorType == 0)
-                        {
-                            hitTracker.leftMiss++;
-                        }
-                        else
-                        {
-                            hitTracker.rightMiss++;
-                        }
-                        break;
-                    case NoteEventType.bomb:
-                        if (param.colorType == 0)
-                        {
-                            hitTracker.leftBombs++;
-                        }
-                        else
-                        {
-                            hitTracker.rightBombs++;
-                        }
-                        break;
-                    case NoteEventType.good:
-                        if (param.colorType == 0)
-                        {
-                            leftGoodCuts++;
-                            leftTiming += item.noteCutInfo.timeDeviation;
-                        }
-                        else
-                        {
-                            rightGoodCuts++;
-                            rightTiming += item.noteCutInfo.timeDeviation;
-                        }
-                        break;
-                    default:
-                        break;
+                    won = replay.info.failTime < 0.01,
+                    failTime = replay.info.failTime,
+                    endTime = (replay.frames.LastOrDefault() != null) ? replay.frames.Last().time : 0,
+                    nbOfPause = filteredPauses.Count(),
+                    totalPauseDuration = filteredPauses.Count() > 0 ? filteredPauses.Sum(p => p.duration) : 0,
+                    jumpDistance = replay.info.jumpDistance,
+                    averageHeight = replay.heights.Count() > 0 ? replay.heights.Average(h => h.height) : replay.info.height,
+                    averageHeadPosition = new AveragePosition {
+                        x = replay.frames.Average(f => f.head.position.x),
+                        y = replay.frames.Average(f => f.head.position.y),
+                        z = replay.frames.Average(f => f.head.position.z),
+                    }
+                };
+
+                HitTracker hitTracker = new HitTracker();
+                result.hitTracker = hitTracker;
+
+                int leftGoodCuts = 0, rightGoodCuts = 0;
+                float leftTiming = 0, rightTiming = 0;
+
+                foreach (var item in replay.notes)
+                {
+                    NoteParams param = new NoteParams(item.noteID);
+                    switch (item.eventType)
+                    {
+                        case NoteEventType.bad:
+                            if (item.noteCutInfo.saberType == 0)
+                            {
+                                hitTracker.leftBadCuts++;
+                            }
+                            else
+                            {
+                                hitTracker.rightBadCuts++;
+                            }
+                            break;
+                        case NoteEventType.miss:
+                            if (param.colorType == 0)
+                            {
+                                hitTracker.leftMiss++;
+                            }
+                            else
+                            {
+                                hitTracker.rightMiss++;
+                            }
+                            break;
+                        case NoteEventType.bomb:
+                            if (param.colorType == 0)
+                            {
+                                hitTracker.leftBombs++;
+                            }
+                            else
+                            {
+                                hitTracker.rightBombs++;
+                            }
+                            break;
+                        case NoteEventType.good:
+                            if (param.colorType == 0)
+                            {
+                                leftGoodCuts++;
+                                leftTiming += item.noteCutInfo.timeDeviation;
+                            }
+                            else
+                            {
+                                rightGoodCuts++;
+                                rightTiming += item.noteCutInfo.timeDeviation;
+                            }
+                            break;
+                        default:
+                            break;
+                    }
                 }
-            }
-            if (leftGoodCuts > 0) {
-                hitTracker.leftTiming = leftTiming / leftGoodCuts;
-            }
-            if (rightGoodCuts > 0) {
-                hitTracker.rightTiming = rightTiming / rightGoodCuts;
-            }
+                if (leftGoodCuts > 0) {
+                    hitTracker.leftTiming = leftTiming / leftGoodCuts;
+                }
+                if (rightGoodCuts > 0) {
+                    hitTracker.rightTiming = rightTiming / rightGoodCuts;
+                }
 
-            (AccuracyTracker accuracy, List<NoteStruct> structs, int maxCombo, int? maxStreak) = Accuracy(replay.notes, replay.walls);
-            result.hitTracker.maxCombo = maxCombo;
-            result.hitTracker.maxStreak = maxStreak;
-            result.winTracker.totalScore = structs.Last().totalScore;
-            result.winTracker.maxScore = structs.Last().maxScore;
-            result.accuracyTracker = accuracy;
-            result.scoreGraphTracker = ScoreGraph(structs, (int)replay.frames.Last().time);
+                (AccuracyTracker accuracy, List<NoteStruct> structs, int maxCombo, int? maxStreak) = Accuracy(replay.notes, replay.walls);
+                result.hitTracker.maxCombo = maxCombo;
+                result.hitTracker.maxStreak = maxStreak;
+                result.winTracker.totalScore = structs.Last().totalScore;
+                result.winTracker.maxScore = structs.Last().maxScore;
+                result.accuracyTracker = accuracy;
+                result.scoreGraphTracker = ScoreGraph(structs, (int)replay.frames.Last().time);
 
-            return (result, null);
+                if (replay.info.modifiers.Contains("NF")) {
+                    result.winTracker.failTime = structs.FirstOrDefault(s => s.energy <= 0)?.time ?? 0;
+                }
+
+                return (result, null);
             } catch (Exception e) {
                 return (null, e.Message);
             }
@@ -276,6 +282,7 @@ namespace ReplayDecoder
                     time = wall.spawnTime > wall.time ? wall.spawnTime : wall.time,
                     spawnTime = wall.spawnTime > wall.time ? wall.time : wall.spawnTime,
                     id = wall.wallID,
+                    energy = wall.energy,
                     score = -5
                 });
             }
@@ -354,6 +361,7 @@ namespace ReplayDecoder
             int maxScore = 0;
             int fcScore = 0; float currentFcAcc = 1;
             int streak = 0, maxStreak = 0; 
+            float energy = 0.5f;
             MultiplierCounter maxCounter = new MultiplierCounter();
             MultiplierCounter normalCounter = new MultiplierCounter();
 
@@ -380,6 +388,31 @@ namespace ReplayDecoder
                     if (note.isBlock) {
                         fcScore += (int)MathF.Round((float)(maxCounter.Multiplier * scoreForMaxScore) * currentFcAcc);
                     }
+                    switch (note.score) {
+					    case -2: // badcut
+						    if (note.scoringType == ScoringType.BurstSliderElement) {
+							    energy -= 0.025f;
+						    } else {
+							    energy -= 0.1f;
+						    }
+						    break;
+					    case -3: // miss
+					    case -4: // bomb
+						    if (note.scoringType == ScoringType.BurstSliderElement) {
+							    energy -= 0.03f;
+						    } else {
+							    energy -= 0.15f;
+						    }
+						    break;
+                        case -5: // wall
+                            if (note.energy <= 1.0f) {
+                                energy = note.energy;
+                            }
+                            break;
+
+					    default:
+						    break;
+				    }
                 }
                 else
                 {
@@ -388,6 +421,15 @@ namespace ReplayDecoder
                     multiplier = normalCounter.Multiplier;
                     score += multiplier * note.score;
                     fcScore += maxCounter.Multiplier * note.score;
+
+                    if (note.scoringType == ScoringType.BurstSliderElement) {
+					    energy += 1 / 500;
+				    } else {
+					    energy += 0.01f;
+				    }
+				    if (energy > 1) {
+					    energy = 1;
+				    }
                 }
 
                 if (!potentiallyPoodle && note.scoringType != ScoringType.BurstSliderElement) {
@@ -410,6 +452,7 @@ namespace ReplayDecoder
                 note.totalScore = score;
                 note.maxScore = maxScore;
                 note.combo = combo;
+                note.energy = energy;
 
                 if (note.isBlock)
                 {

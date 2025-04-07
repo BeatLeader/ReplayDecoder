@@ -28,6 +28,7 @@ namespace ReplayDecoder
     {
         public bool won { get; set; }
         public float endTime { get; set; }
+        public float failTime { get; set; }
         public int nbOfPause { get; set; }
         public float totalPauseDuration { get; set; }
         public float jumpDistance { get; set; }
