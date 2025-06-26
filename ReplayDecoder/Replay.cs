@@ -1337,7 +1337,7 @@ namespace ReplayDecoder
             return result;
         }
 
-        private static int DecodeInt(byte[] buffer, ref int pointer)
+        public static int DecodeInt(byte[] buffer, ref int pointer)
         {
             int result = BitConverter.ToInt32(buffer, pointer);
             pointer += 4;
@@ -1375,14 +1375,14 @@ namespace ReplayDecoder
             return @string;
         }
 
-        private static float DecodeFloat(byte[] buffer, ref int pointer)
+        public static float DecodeFloat(byte[] buffer, ref int pointer)
         {
             float result = BitConverter.ToSingle(buffer, pointer);
             pointer += 4;
             return result;
         }
 
-        private static bool DecodeBool(byte[] buffer, ref int pointer)
+        public static bool DecodeBool(byte[] buffer, ref int pointer)
         {
             bool result = BitConverter.ToBoolean(buffer, pointer);
             pointer++;
