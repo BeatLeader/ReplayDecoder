@@ -197,8 +197,9 @@ namespace ReplayDecoder
                         index = 0;
                     }
 
-                    if (param.scoringType != ScoringType.BurstSliderElement
-                     && param.scoringType != ScoringType.BurstSliderHead)
+                    var scoreDefinition = ScoringExtensions.ScoreDefinitions[param.scoringType];
+
+                    if (scoreDefinition.accApplicable)
                     {
                         gridCounts[index]++;
                         result.gridAcc[index] += (float)scoreValue;
@@ -207,24 +208,21 @@ namespace ReplayDecoder
                     (int before, int after, int acc) = CutScoresForNote(note, param.scoringType);
                     if (param.colorType == 0)
                     {
-                        if (param.scoringType != ScoringType.SliderTail && param.scoringType != ScoringType.BurstSliderElement) {
+                        if (scoreDefinition.beforeCutApplicable) {
                             if (note.noteCutInfo.beforeCutRating < 5) {
                                 result.leftAverageCut[0] += (float)before;
                                 result.leftPreswing += note.noteCutInfo.beforeCutRating;
                                 leftCuts[0]++;
                             }
                         }
-                        if (param.scoringType != ScoringType.BurstSliderElement
-                         && param.scoringType != ScoringType.BurstSliderHead)
+                        if (scoreDefinition.accApplicable)
                         {
                             result.leftAverageCut[1] += (float)acc;
                             result.accLeft += (float)scoreValue;
                             result.leftTimeDependence += Math.Abs(note.noteCutInfo.cutNormal.z);
                             leftCuts[1]++;
                         }
-                        if (param.scoringType != ScoringType.SliderHead
-                            && param.scoringType != ScoringType.BurstSliderHead
-                            && param.scoringType != ScoringType.BurstSliderElement)
+                        if (scoreDefinition.afterCutApplicable)
                         {
                             if (note.noteCutInfo.afterCutRating < 5) {
                                 result.leftAverageCut[2] += (float)after;
@@ -235,7 +233,7 @@ namespace ReplayDecoder
                     }
                     else
                     {
-                        if (param.scoringType != ScoringType.SliderTail && param.scoringType != ScoringType.BurstSliderElement)
+                        if (scoreDefinition.beforeCutApplicable)
                         {
                             if (note.noteCutInfo.beforeCutRating < 5) {
                                 result.rightAverageCut[0] += (float)before;
@@ -243,17 +241,14 @@ namespace ReplayDecoder
                                 rightCuts[0]++;
                             }
                         }
-                        if (param.scoringType != ScoringType.BurstSliderElement 
-                         && param.scoringType != ScoringType.BurstSliderHead)
+                        if (scoreDefinition.accApplicable)
                         {
                             result.rightAverageCut[1] += (float)acc;
                             result.rightTimeDependence += Math.Abs(note.noteCutInfo.cutNormal.z);
                             result.accRight += (float)scoreValue;
                             rightCuts[1]++;
                         }
-                        if (param.scoringType != ScoringType.SliderHead
-                            && param.scoringType != ScoringType.BurstSliderHead
-                            && param.scoringType != ScoringType.BurstSliderElement)
+                        if (scoreDefinition.afterCutApplicable)
                         {
                             if (note.noteCutInfo.afterCutRating < 5) {
                                 result.rightAverageCut[2] += (float)after;
@@ -345,7 +340,7 @@ namespace ReplayDecoder
                 var ordered = group.OrderBy(g => g.time).ToList();
                 for (int i = 1; i < ordered.Count; i++)
                 {
-                    if ((ordered[i].time - ordered[i - 1].time) < 0.01 && ordered[i].scoringType != ScoringType.BurstSliderElement && ordered[i - 1].scoringType != ScoringType.BurstSliderElement) {
+                    if ((ordered[i].time - ordered[i - 1].time) < 0.01 && ordered[i].scoringType != ScoringType.ChainLink && ordered[i - 1].scoringType != ScoringType.ChainLink) {
                         potentiallyPoodle = true;
                         break;
                     }
@@ -368,12 +363,8 @@ namespace ReplayDecoder
             for (var i = 0; i < allStructs.Count(); i++)
             {
                 var note = allStructs[i];
-                int scoreForMaxScore = 115;
-                if (note.scoringType == ScoringType.BurstSliderHead) {
-                    scoreForMaxScore = 85;
-                } else if (note.scoringType == ScoringType.BurstSliderElement) {
-                    scoreForMaxScore = 20;
-                }
+                var scoreDefinition = ScoringExtensions.ScoreDefinitions[note.scoringType];
+                int scoreForMaxScore = scoreDefinition.maxCutScore;
 
                 if (note.isBlock) {
                     maxCounter.Increase();
@@ -390,7 +381,7 @@ namespace ReplayDecoder
                     }
                     switch (note.score) {
 					    case -2: // badcut
-						    if (note.scoringType == ScoringType.BurstSliderElement) {
+						    if (note.scoringType == ScoringType.ChainLink) {
 							    energy -= 0.025f;
 						    } else {
 							    energy -= 0.1f;
@@ -398,7 +389,7 @@ namespace ReplayDecoder
 						    break;
 					    case -3: // miss
 					    case -4: // bomb
-						    if (note.scoringType == ScoringType.BurstSliderElement) {
+						    if (note.scoringType == ScoringType.ChainLink) {
 							    energy -= 0.03f;
 						    } else {
 							    energy -= 0.15f;
@@ -422,7 +413,7 @@ namespace ReplayDecoder
                     score += multiplier * note.score;
                     fcScore += maxCounter.Multiplier * note.score;
 
-                    if (note.scoringType == ScoringType.BurstSliderElement) {
+                    if (note.scoringType == ScoringType.ChainLink) {
 					    energy += 1 / 500;
 				    } else {
 					    energy += 0.01f;
@@ -432,7 +423,7 @@ namespace ReplayDecoder
 				    }
                 }
 
-                if (!potentiallyPoodle && note.scoringType != ScoringType.BurstSliderElement) {
+                if (!potentiallyPoodle && note.scoringType != ScoringType.ChainLink) {
                     if (note.score == 115) {
                         streak++;
                     } else if (note.isBlock) {
@@ -536,45 +527,20 @@ namespace ReplayDecoder
         public static (int, int, int) CutScoresForNote(NoteEvent note, ScoringType scoringType)
         {
             var cut = note.noteCutInfo;
-            double beforeCutRawScore = 0;
-            if (scoringType != ScoringType.BurstSliderElement)
-            {
-                if (scoringType == ScoringType.SliderTail)
-                {
-                    beforeCutRawScore = 70;
-                }
-                else
-                {
-                    beforeCutRawScore = Math.Clamp(Math.Round(70 * cut.beforeCutRating), 0, 70);
-                }
-            }
-            double afterCutRawScore = 0;
-            if (scoringType != ScoringType.BurstSliderElement)
-            {
-                if (scoringType == ScoringType.BurstSliderHead)
-                {
-                    afterCutRawScore = 0;
-                }
-                else if (scoringType == ScoringType.SliderHead)
-                {
-                    afterCutRawScore = 30;
-                }
-                else
-                {
-                    afterCutRawScore = Math.Clamp(Math.Round(30 * cut.afterCutRating), 0, 30);
-                }
-            }
+            
+            var scoreDefinition = ScoringExtensions.ScoreDefinitions[scoringType];
+
+            double beforeCutRawScore = Math.Clamp(Math.Round(scoreDefinition.maxBeforeCutScore * cut.beforeCutRating), scoreDefinition.minBeforeCutScore, scoreDefinition.maxBeforeCutScore);
+            double afterCutRawScore = Math.Clamp(Math.Round(scoreDefinition.maxAfterCutScore * cut.afterCutRating), scoreDefinition.maxBeforeCutScore, scoreDefinition.maxAfterCutScore);
             double cutDistanceRawScore = 0;
-            if (scoringType == ScoringType.BurstSliderElement)
+            if (scoreDefinition.fixedCutScore > 0)
             {
-                cutDistanceRawScore = 20;
+                cutDistanceRawScore = scoreDefinition.fixedCutScore;
             }
             else
             {
-
                 double num = 1 - Clamp(cut.cutDistanceToCenter / 0.3f);
-                cutDistanceRawScore = Math.Round(15 * num);
-
+                cutDistanceRawScore = Math.Round(scoreDefinition.maxCenterDistanceCutScore * num);
             }
 
             return ((int)beforeCutRawScore, (int)afterCutRawScore, (int)cutDistanceRawScore);

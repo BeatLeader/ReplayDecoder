@@ -1420,51 +1420,19 @@ namespace ReplayDecoder
                 return new NoteScore(0, 0, 0);
             }
 
-            int before_cut_raw_score = 0;
-
-            if (scoring_type != ScoringType.BurstSliderElement)
-            {
-                if (scoring_type == ScoringType.SliderTail)
-                {
-                    before_cut_raw_score = 70;
-                }
-                else
-                {
-                    float score = 70 * cut.beforeCutRating;
-                    before_cut_raw_score = RoundHalfUp(score);
-                    before_cut_raw_score = Clamp(before_cut_raw_score, 0, 70);
-                }
-            }
-
-            int after_cut_raw_score = 0;
-
-            if (scoring_type != ScoringType.BurstSliderElement)
-            {
-                if (scoring_type == ScoringType.BurstSliderHead)
-                {
-                    after_cut_raw_score = 0;
-                }
-                else if (scoring_type == ScoringType.SliderHead)
-                {
-                    after_cut_raw_score = 30;
-                }
-                else
-                {
-                    float score = 30 * cut.afterCutRating;
-                    after_cut_raw_score = RoundHalfUp(score);
-                    after_cut_raw_score = Clamp(after_cut_raw_score, 0, 30);
-                }
-            }
+            var scoreDefinition = ScoringExtensions.ScoreDefinitions[scoring_type];
+            int before_cut_raw_score = Clamp(RoundHalfUp(scoreDefinition.maxBeforeCutScore * cut.beforeCutRating), scoreDefinition.minBeforeCutScore, scoreDefinition.maxBeforeCutScore);
+            int after_cut_raw_score = Clamp(RoundHalfUp(scoreDefinition.maxAfterCutScore * cut.afterCutRating), scoreDefinition.minAfterCutScore, scoreDefinition.maxAfterCutScore);
 
             int cut_distance_raw_score;
 
-            if (scoring_type == ScoringType.BurstSliderElement)
+            if (scoreDefinition.fixedCutScore > 0)
             {
-                cut_distance_raw_score = 20;
+                cut_distance_raw_score = scoreDefinition.fixedCutScore;
             }
             else
             {
-                var cut_distance_raw_score_float = (15f * (1f - Clamp(cut.cutDistanceToCenter / 0.3f, 0f, 1f)));
+                var cut_distance_raw_score_float = (scoreDefinition.maxCenterDistanceCutScore * (1f - Clamp(cut.cutDistanceToCenter / 0.3f, 0f, 1f)));
                 cut_distance_raw_score = RoundHalfUp(cut_distance_raw_score_float);
             }
 
