@@ -1,10 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-
-namespace ReplayDecoder
+﻿namespace ReplayDecoder
 {
     public enum ScoringType
     {
@@ -12,10 +6,104 @@ namespace ReplayDecoder
         Ignore,
         NoScore,
         Normal,
-        SliderHead,
-        SliderTail,
-        BurstSliderHead,
-        BurstSliderElement
+        ArcHead,
+        ArcTail,
+        ChainHead,
+        ChainLink,
+        ArcHeadArcTail,
+        ChainHeadArcTail,
+        ChainLinkArcHead,
+        ChainHeadArcHead,
+        ChainHeadArcHeadArcTail,
+    }
+
+    public class NoteScoreDefinition
+    {
+        public readonly int maxCenterDistanceCutScore;
+        public readonly int minBeforeCutScore;
+        public readonly int maxBeforeCutScore;
+        public readonly int minAfterCutScore;
+        public readonly int maxAfterCutScore;
+        public readonly int fixedCutScore;
+
+        public int maxCutScore => this.maxCenterDistanceCutScore + this.maxBeforeCutScore + this.maxAfterCutScore + this.fixedCutScore;
+
+        public int executionOrder => this.maxCutScore;
+
+        public bool accApplicable => this.maxCenterDistanceCutScore > 0 && this.fixedCutScore == 0;
+        public bool beforeCutApplicable => this.minBeforeCutScore < this.maxBeforeCutScore;
+        public bool afterCutApplicable => this.minAfterCutScore > this.maxAfterCutScore;
+
+        public NoteScoreDefinition(
+            int maxCenterDistanceCutScore,
+            int minBeforeCutScore,
+            int maxBeforeCutScore,
+            int minAfterCutScore,
+            int maxAfterCutScore,
+            int fixedCutScore)
+        {
+            this.maxCenterDistanceCutScore = maxCenterDistanceCutScore;
+            this.minBeforeCutScore = minBeforeCutScore;
+            this.maxBeforeCutScore = maxBeforeCutScore;
+            this.minAfterCutScore = minAfterCutScore;
+            this.maxAfterCutScore = maxAfterCutScore;
+            this.fixedCutScore = fixedCutScore;
+        }
+    }
+
+    public static class ScoringExtensions
+    {
+        public static readonly Dictionary<ScoringType, NoteScoreDefinition> ScoreDefinitions = new Dictionary<ScoringType, NoteScoreDefinition>()
+        {
+            {
+                ScoringType.Ignore,
+                (NoteScoreDefinition) null
+            },
+            {
+                ScoringType.NoScore,
+                new NoteScoreDefinition(0, 0, 0, 0, 0, 0)
+            },
+            {
+                ScoringType.Normal,
+                new NoteScoreDefinition(15, 0, 70, 0, 30, 0)
+            },
+            {
+                ScoringType.ArcHead,
+                new NoteScoreDefinition(15, 0, 70, 30, 30, 0)
+            },
+            {
+                ScoringType.ArcTail,
+                new NoteScoreDefinition(15, 70, 70, 0, 30, 0)
+            },
+            {
+                ScoringType.ChainHead,
+                new NoteScoreDefinition(15, 0, 70, 0, 0, 0)
+            },
+            {
+                ScoringType.ChainLink,
+                new NoteScoreDefinition(0, 0, 0, 0, 0, 20)
+            },
+            {
+                ScoringType.ArcHeadArcTail,
+                new NoteScoreDefinition(15, 70, 70, 30, 30, 0)
+            },
+            {
+                ScoringType.ChainHeadArcTail,
+                new NoteScoreDefinition(15, 70, 70, 30, 30, 0)
+            },
+            {
+                ScoringType.ChainLinkArcHead,
+                new NoteScoreDefinition(0, 0, 0, 0, 0, 20)
+            },
+            {
+                ScoringType.ChainHeadArcHead,
+                new NoteScoreDefinition(15, 0, 70, 30, 30, 0)
+            },
+            {
+                ScoringType.ChainHeadArcHeadArcTail,
+                new NoteScoreDefinition(15, 70, 70, 30, 30, 0)
+            }
+        };
     }
 
     public class NoteParams
