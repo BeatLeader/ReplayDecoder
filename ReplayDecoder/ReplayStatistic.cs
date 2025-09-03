@@ -495,6 +495,12 @@ namespace ReplayDecoder
             return scoreGraph;
         }
 
+        public static double Clamp(double value, double min, double max)
+        {
+            if (value < min) return min;
+            return value > max ? max : value;
+        }
+
         public static float Clamp(float value)
         {
             if (value < 0.0) return 0.0f;
@@ -530,8 +536,8 @@ namespace ReplayDecoder
             
             var scoreDefinition = ScoringExtensions.ScoreDefinitions[scoringType];
 
-            double beforeCutRawScore = Math.Clamp(Math.Round(scoreDefinition.maxBeforeCutScore * cut.beforeCutRating), scoreDefinition.minBeforeCutScore, scoreDefinition.maxBeforeCutScore);
-            double afterCutRawScore = Math.Clamp(Math.Round(scoreDefinition.maxAfterCutScore * cut.afterCutRating), scoreDefinition.maxBeforeCutScore, scoreDefinition.maxAfterCutScore);
+            double beforeCutRawScore = Clamp(Math.Round(scoreDefinition.maxBeforeCutScore * cut.beforeCutRating), scoreDefinition.minBeforeCutScore, scoreDefinition.maxBeforeCutScore);
+            double afterCutRawScore = Clamp(Math.Round(scoreDefinition.maxAfterCutScore * cut.afterCutRating), scoreDefinition.minAfterCutScore, scoreDefinition.maxAfterCutScore);
             double cutDistanceRawScore = 0;
             if (scoreDefinition.fixedCutScore > 0)
             {

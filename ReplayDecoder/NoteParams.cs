@@ -56,8 +56,12 @@
         public static readonly Dictionary<ScoringType, NoteScoreDefinition> ScoreDefinitions = new Dictionary<ScoringType, NoteScoreDefinition>()
         {
             {
+                ScoringType.Default,
+                new NoteScoreDefinition(15, 0, 70, 0, 30, 0)
+            },
+            {
                 ScoringType.Ignore,
-                (NoteScoreDefinition) null
+                new NoteScoreDefinition(0, 0, 0, 0, 0, 0)
             },
             {
                 ScoringType.NoScore,
