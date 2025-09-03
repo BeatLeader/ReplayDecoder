@@ -922,10 +922,19 @@ namespace ReplayDecoder
                 result.score = NoteScore.CalculateNoteScore(result.noteCutInfo, result.noteParams.scoringType);
             }
 
-            if (result.noteID == -1 || (result.noteID > 0 && result.noteID < 100000 && result.noteID % 10 == 9)) {
-                result.noteID += 4;
+            if (result.noteID == -1) {
+                result.noteID += 39;
                 result.eventType = NoteEventType.bomb;
             }
+			if (result.noteID > 0 && result.noteID < 100000) {
+				if (result.noteID % 100 == 99) {
+					result.eventType = NoteEventType.bomb;
+					result.noteID += 39;
+				} else if (result.noteID % 10 == 9) {
+					result.eventType = NoteEventType.bomb;
+					result.noteID -= 1;
+				}
+			}
 
             return result;
         }
