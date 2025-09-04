@@ -32,7 +32,7 @@
 
         public bool accApplicable => this.maxCenterDistanceCutScore > 0 && this.fixedCutScore == 0;
         public bool beforeCutApplicable => this.minBeforeCutScore < this.maxBeforeCutScore;
-        public bool afterCutApplicable => this.minAfterCutScore > this.maxAfterCutScore;
+        public bool afterCutApplicable => this.minAfterCutScore < this.maxAfterCutScore;
 
         public NoteScoreDefinition(
             int maxCenterDistanceCutScore,
@@ -145,6 +145,10 @@
 
                 colorType = id / 10;
                 cutDirection = id - colorType * 10;
+            }
+
+            if (scoringType < ScoringType.Default || scoringType > ScoringType.ChainHeadArcHeadArcTail) {
+                scoringType = ScoringType.Default;
             }
         }
     }
