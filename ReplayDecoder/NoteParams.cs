@@ -118,7 +118,7 @@
         public int colorType;
         public int cutDirection;
 
-        public NoteParams(int noteId)
+        public NoteParams(int noteId, NoteEventType eventType)
         {
             int id = noteId;
             if (id < 100000) {
@@ -148,6 +148,10 @@
             }
 
             if (scoringType < ScoringType.Default || scoringType > ScoringType.ChainHeadArcHeadArcTail) {
+                scoringType = ScoringType.Default;
+            }
+
+            if (eventType != NoteEventType.bomb && (scoringType == ScoringType.Ignore || scoringType == ScoringType.NoScore)) {
                 scoringType = ScoringType.Default;
             }
         }

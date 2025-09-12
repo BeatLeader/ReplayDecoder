@@ -99,7 +99,7 @@ namespace ReplayDecoder
 
                 foreach (var item in replay.notes)
                 {
-                    NoteParams param = new NoteParams(item.noteID);
+                    NoteParams param = new NoteParams(item.noteID, item.eventType);
                     switch (item.eventType)
                     {
                         case NoteEventType.bad:
@@ -187,7 +187,7 @@ namespace ReplayDecoder
             List<NoteStruct> allStructs = new List<NoteStruct>();
             foreach (var note in notes)
             {
-                NoteParams param = new NoteParams(note.noteID);
+                NoteParams param = new NoteParams(note.noteID, note.eventType);
                 int scoreValue = ScoreForNote(note, param.scoringType);
 
                 if (scoreValue > 0)

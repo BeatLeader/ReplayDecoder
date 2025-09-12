@@ -913,7 +913,7 @@ namespace ReplayDecoder
         {
             NoteEvent result = new NoteEvent();
             result.noteID = await DecodeInt(stream);
-            result.noteParams = new NoteParams(result.noteID);
+            result.noteParams = new NoteParams(result.noteID, result.eventType);
             result.eventTime = await DecodeFloat(stream);
             result.spawnTime = await DecodeFloat(stream);
             result.eventType = (NoteEventType) await DecodeInt(stream);
@@ -1271,7 +1271,7 @@ namespace ReplayDecoder
         {
             NoteEvent result = new NoteEvent();
             result.noteID = DecodeInt(buffer, ref pointer);
-            result.noteParams = new NoteParams(result.noteID);
+            result.noteParams = new NoteParams(result.noteID, result.eventType);
             result.eventTime = DecodeFloat(buffer, ref pointer);
             result.spawnTime = DecodeFloat(buffer, ref pointer);
             result.eventType = (NoteEventType)DecodeInt(buffer, ref pointer);
