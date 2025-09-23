@@ -219,6 +219,13 @@ namespace ReplayDecoder
                         {
                             result.leftAverageCut[1] += (float)acc;
                             result.accLeft += (float)scoreValue;
+                            if (scoreDefinition.maxAfterCutScore == 0) {
+                                result.accLeft += (float)ScoringExtensions.NORMAL_MAX_AFTER_CUT;
+                            }
+                            if (scoreDefinition.maxBeforeCutScore == 0) {
+                                result.accLeft += (float)ScoringExtensions.NORMAL_MAX_BEFORE_CUT;
+                            }
+
                             result.leftTimeDependence += Math.Abs(note.noteCutInfo.cutNormal.z);
                             leftCuts[1]++;
                         }
@@ -246,6 +253,12 @@ namespace ReplayDecoder
                             result.rightAverageCut[1] += (float)acc;
                             result.rightTimeDependence += Math.Abs(note.noteCutInfo.cutNormal.z);
                             result.accRight += (float)scoreValue;
+                            if (scoreDefinition.maxAfterCutScore == 0) {
+                                result.accRight += (float)ScoringExtensions.NORMAL_MAX_AFTER_CUT;
+                            }
+                            if (scoreDefinition.maxBeforeCutScore == 0) {
+                                result.accRight += (float)ScoringExtensions.NORMAL_MAX_BEFORE_CUT;
+                            }
                             rightCuts[1]++;
                         }
                         if (scoreDefinition.afterCutApplicable)
