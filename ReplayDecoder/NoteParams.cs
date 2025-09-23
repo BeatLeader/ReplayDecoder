@@ -53,11 +53,14 @@
 
     public static class ScoringExtensions
     {
+        public static int NORMAL_MAX_BEFORE_CUT = 70;
+        public static int NORMAL_MAX_AFTER_CUT = 30;
+
         public static readonly Dictionary<ScoringType, NoteScoreDefinition> ScoreDefinitions = new Dictionary<ScoringType, NoteScoreDefinition>()
         {
             {
                 ScoringType.Default,
-                new NoteScoreDefinition(15, 0, 70, 0, 30, 0)
+                new NoteScoreDefinition(15, 0, NORMAL_MAX_BEFORE_CUT, 0, NORMAL_MAX_AFTER_CUT, 0)
             },
             {
                 ScoringType.Ignore,
@@ -69,19 +72,19 @@
             },
             {
                 ScoringType.Normal,
-                new NoteScoreDefinition(15, 0, 70, 0, 30, 0)
+                new NoteScoreDefinition(15, 0, NORMAL_MAX_BEFORE_CUT, 0, NORMAL_MAX_AFTER_CUT, 0)
             },
             {
                 ScoringType.ArcHead,
-                new NoteScoreDefinition(15, 0, 70, 30, 30, 0)
+                new NoteScoreDefinition(15, 0, NORMAL_MAX_BEFORE_CUT, NORMAL_MAX_AFTER_CUT, NORMAL_MAX_AFTER_CUT, 0)
             },
             {
                 ScoringType.ArcTail,
-                new NoteScoreDefinition(15, 70, 70, 0, 30, 0)
+                new NoteScoreDefinition(15, NORMAL_MAX_BEFORE_CUT, NORMAL_MAX_BEFORE_CUT, 0, NORMAL_MAX_AFTER_CUT, 0)
             },
             {
                 ScoringType.ChainHead,
-                new NoteScoreDefinition(15, 0, 70, 0, 0, 0)
+                new NoteScoreDefinition(15, 0, NORMAL_MAX_BEFORE_CUT, 0, 0, 0)
             },
             {
                 ScoringType.ChainLink,
@@ -89,11 +92,11 @@
             },
             {
                 ScoringType.ArcHeadArcTail,
-                new NoteScoreDefinition(15, 70, 70, 30, 30, 0)
+                new NoteScoreDefinition(15, NORMAL_MAX_BEFORE_CUT, NORMAL_MAX_BEFORE_CUT, NORMAL_MAX_AFTER_CUT, NORMAL_MAX_AFTER_CUT, 0)
             },
             {
                 ScoringType.ChainHeadArcTail,
-                new NoteScoreDefinition(15, 70, 70, 30, 30, 0)
+                new NoteScoreDefinition(15, NORMAL_MAX_BEFORE_CUT, NORMAL_MAX_BEFORE_CUT, NORMAL_MAX_AFTER_CUT, NORMAL_MAX_AFTER_CUT, 0)
             },
             {
                 ScoringType.ChainLinkArcHead,
@@ -101,11 +104,11 @@
             },
             {
                 ScoringType.ChainHeadArcHead,
-                new NoteScoreDefinition(15, 0, 70, 30, 30, 0)
+                new NoteScoreDefinition(15, 0, NORMAL_MAX_BEFORE_CUT, NORMAL_MAX_AFTER_CUT, NORMAL_MAX_AFTER_CUT, 0)
             },
             {
                 ScoringType.ChainHeadArcHeadArcTail,
-                new NoteScoreDefinition(15, 70, 70, 30, 30, 0)
+                new NoteScoreDefinition(15, NORMAL_MAX_BEFORE_CUT, NORMAL_MAX_BEFORE_CUT, NORMAL_MAX_AFTER_CUT, NORMAL_MAX_AFTER_CUT, 0)
             }
         };
     }
