@@ -5,6 +5,7 @@ using System.Linq;
 using System.Text;
 using System.Text.RegularExpressions;
 using System.Threading.Tasks;
+using CommunityToolkit.HighPerformance;
 
 namespace ReplayDecoder
 {
@@ -62,7 +63,7 @@ namespace ReplayDecoder
         public Transform leftHand;
         public Transform rightHand;
 
-        public void ToArray(float[,] array, int index, Frame previous)
+        public void ToArray(Span2D<float> array, int index, Frame previous)
         {
             array[index, 0] = (time - previous.time);
 
