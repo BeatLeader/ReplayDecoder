@@ -19,7 +19,7 @@ namespace ReplayDecoder
         public float energy;
     }
 
-    class MultiplierCounter
+    public class MultiplierCounter
     {
         public int Multiplier { get; private set; } = 1;
 
